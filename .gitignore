@@ -1,4 +1,5 @@
 # 内部引き継ぎ文書（公開リポに含めない）
 HANDOFF*.md
 
+.claude/
 .DS_Store
