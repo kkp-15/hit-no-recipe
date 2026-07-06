@@ -4,7 +4,7 @@
 カードを選んでかけ合わせるだけで、あなただけのアイデアレシピ文ができあがるブレストツールです。
 大人のブレストにも、子どもの自由研究にも。
 
-**▶ 使ってみる: https://kkp-15.github.io/hit-no-recipe/**
+**▶ 使ってみる: https://hit-no-recipe.pages.dev/**
 
 ![ヒットのレシピ スクリーンショット](screenshot.png)
 
