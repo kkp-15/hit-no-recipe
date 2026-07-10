@@ -428,10 +428,10 @@ function copyIdea(id){
 }
 
 function ideaMarkdown(it){
-  const title = esc(it.title);
-  const recipe = esc(it.recipe);
-  const chips = (Array.isArray(it.chips) ? it.chips : []).map(c=>esc(c)).join(" / ");
-  const memo = it.memo ? `**メモ:** ${esc(it.memo)}\n` : "";
+  const title = it.title;
+  const recipe = it.recipe;
+  const chips = (Array.isArray(it.chips) ? it.chips : []).join(" / ");
+  const memo = it.memo ? `**メモ:** ${it.memo}\n` : "";
   return `## ${title}\n\n**レシピ:** ${recipe}\n**選んだカード:** ${chips}\n${memo}\n（このレシピをもとに、具体的なサービス・商品の企画に落とし込んでください）`;
 }
 
