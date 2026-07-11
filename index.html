@@ -174,6 +174,22 @@
     background:none;border:none;cursor:pointer;color:var(--tomato);padding:0;
   }
   .idea-card .acts button.del{color:var(--sub)}
+  .edit-form{margin-bottom:8px}
+  .edit-form label{display:block;font-size:11.5px;font-weight:800;margin-top:8px}
+  .edit-form input,.edit-form textarea{
+    width:100%;font-family:inherit;font-size:13px;
+    background:#fff;border:var(--bd);border-radius:9px;color:var(--ink);
+    padding:8px 10px;margin-top:4px;
+  }
+  .edit-form textarea{min-height:72px;resize:vertical}
+  .edit-form .edit-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:9px}
+  .edit-form .edit-actions button{
+    font-family:inherit;font-size:12px;font-weight:800;
+    border:var(--bd);border-radius:9px;padding:7px 12px;cursor:pointer;
+    box-shadow:var(--hard-sm);
+  }
+  .edit-form .edit-actions .edit-save{background:var(--leaf);color:#fff}
+  .edit-form .edit-actions .edit-cancel{background:#fff;color:var(--sub)}
   .empty{
     text-align:center;color:var(--sub);font-size:13px;font-weight:700;
     padding:26px;border:2px dashed var(--ink);border-radius:16px;background:#fff;
@@ -476,6 +492,40 @@ function delIdea(id){
   renderIdeas();
 }
 
+let editingIdeaId = null;
+
+function startEditIdea(id){
+  editingIdeaId = id;
+  renderIdeas();
+  const input = document.getElementById(`editTitle-${id}`);
+  if(input) input.focus();
+}
+
+function cancelEditIdea(){
+  editingIdeaId = null;
+  renderIdeas();
+}
+
+function saveEditIdea(id){
+  if(editingIdeaId!==id) return;
+  const titleInput = document.getElementById(`editTitle-${id}`);
+  const memoInput = document.getElementById(`editMemo-${id}`);
+  const title = titleInput.value.trim();
+  if(!title){
+    toast("タイトルを入力してください");
+    titleInput.focus();
+    return;
+  }
+  const it = ideas.find(i=>i.id===id);
+  if(!it) return;
+  it.title = title;
+  it.memo = memoInput.value.trim();
+  store.set("kkp_ideas", JSON.stringify(ideas));
+  editingIdeaId = null;
+  renderIdeas();
+  toast("レシピを更新しました");
+}
+
 function renderIdeas(){
   const box = document.getElementById("ideaList");
   document.getElementById("copyAllBtn").disabled = ideas.length===0;
@@ -486,14 +536,25 @@ function renderIdeas(){
   }
   box.innerHTML = ideas.map(it=>`
     <div class="idea-card">
-      <h3>🍽 ${esc(it.title)} <span class="date">${esc(it.date)}</span></h3>
+      ${editingIdeaId===it.id?`
+        <div class="edit-form">
+          <label for="editTitle-${it.id}">タイトル</label>
+          <input id="editTitle-${it.id}" value="${esc(it.title)}">
+          <label for="editMemo-${it.id}">メモ</label>
+          <textarea id="editMemo-${it.id}">${esc(it.memo||"")}</textarea>
+          <div class="edit-actions">
+            <button class="edit-save" onclick="saveEditIdea(${it.id})">保存</button>
+            <button class="edit-cancel" onclick="cancelEditIdea()">キャンセル</button>
+          </div>
+        </div>`:`<h3>🍽 ${esc(it.title)} <span class="date">${esc(it.date)}</span></h3>`}
       <div style="font-size:13px">${esc(it.recipe)}</div>
       <div class="tags">${it.chips.map(c=>`<span class="tag">${esc(c)}</span>`).join("")}</div>
-      ${it.memo?`<div class="memo">📝 ${esc(it.memo)}</div>`:""}
-      <div class="acts">
+      ${editingIdeaId===it.id?"":it.memo?`<div class="memo">📝 ${esc(it.memo)}</div>`:""}
+      ${editingIdeaId===it.id?"":`<div class="acts">
+        <button onclick="startEditIdea(${it.id})">✏️ 編集</button>
         <button onclick="copyIdea(${it.id})">📋 コピー</button>
         <button class="del" onclick="delIdea(${it.id})">🗑 削除</button>
-      </div>
+      </div>`}
     </div>`).join("");
 }
 
