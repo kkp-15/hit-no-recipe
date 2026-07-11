@@ -147,6 +147,15 @@
   .btn-clear{background:#fff;color:var(--sub);flex:0 0 auto;padding:12px 15px}
 
   .ideas{margin-top:30px}
+  .ideas-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .ideas-head h2.cat-label{margin-right:auto}
+  .export-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .export-actions button{
+    font-family:inherit;font-size:12px;font-weight:800;
+    background:#fff;color:var(--ink);border:var(--bd);border-radius:10px;
+    padding:7px 11px;box-shadow:var(--hard-sm);cursor:pointer;
+  }
+  .export-actions button:disabled{color:var(--sub);opacity:.45;box-shadow:none;cursor:not-allowed}
   .idea-card{
     background:#fff;border:var(--bd);border-radius:16px;
     padding:15px 17px;margin-bottom:12px;box-shadow:var(--hard);
@@ -212,7 +221,13 @@
   <div id="money"></div>
 
   <div class="ideas">
-    <h2 class="cat-label">📖 マイレシピ帳</h2>
+    <div class="ideas-head">
+      <h2 class="cat-label">📖 マイレシピ帳</h2>
+      <div class="export-actions" aria-label="レシピをまとめて書き出し">
+        <button id="copyAllBtn" onclick="copyAllIdeas()">まとめて書き出し（コピー）</button>
+        <button id="downloadAllBtn" onclick="downloadAllIdeas()">まとめて書き出し（.txt）</button>
+      </div>
+    </div>
     <div id="ideaList"></div>
   </div>
 
@@ -409,8 +424,38 @@ function copyRecipe(){
 function copyIdea(id){
   const it = ideas.find(i=>i.id===id);
   if(!it) return;
-  const md = `## ${it.title}\n\n**レシピ:** ${it.recipe}\n**選んだカード:** ${it.chips.join(" / ")}\n${it.memo?"**メモ:** "+it.memo+"\n":""}\n（このレシピをもとに、具体的なサービス・商品の企画に落とし込んでください）`;
-  copyText(md, "📋 コピーしました");
+  copyText(ideaMarkdown(it), "📋 コピーしました");
+}
+
+function ideaMarkdown(it){
+  const title = it.title;
+  const recipe = it.recipe;
+  const chips = (Array.isArray(it.chips) ? it.chips : []).join(" / ");
+  const memo = it.memo ? `**メモ:** ${it.memo}\n` : "";
+  return `## ${title}\n\n**レシピ:** ${recipe}\n**選んだカード:** ${chips}\n${memo}\n（このレシピをもとに、具体的なサービス・商品の企画に落とし込んでください）`;
+}
+
+function allIdeasMarkdown(){
+  return ideas.map(ideaMarkdown).join("\n\n---\n\n");
+}
+
+function copyAllIdeas(){
+  if(ideas.length===0) return;
+  copyText(allIdeasMarkdown(), "📋 すべてのレシピをコピーしました");
+}
+
+function downloadAllIdeas(){
+  if(ideas.length===0) return;
+  const blob = new Blob([allIdeasMarkdown()], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "hit-no-recipe-all.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast("すべてのレシピを.txtで保存しました");
 }
 
 function copyText(txt, msg){
@@ -433,13 +478,15 @@ function delIdea(id){
 
 function renderIdeas(){
   const box = document.getElementById("ideaList");
+  document.getElementById("copyAllBtn").disabled = ideas.length===0;
+  document.getElementById("downloadAllBtn").disabled = ideas.length===0;
   if(ideas.length===0){
     box.innerHTML = '<div class="empty">まだレシピがありません。カードをかけ合わせて、最初の一皿を作ろう🍳</div>';
     return;
   }
   box.innerHTML = ideas.map(it=>`
     <div class="idea-card">
-      <h3>🍽 ${esc(it.title)} <span class="date">${it.date}</span></h3>
+      <h3>🍽 ${esc(it.title)} <span class="date">${esc(it.date)}</span></h3>
       <div style="font-size:13px">${esc(it.recipe)}</div>
       <div class="tags">${it.chips.map(c=>`<span class="tag">${esc(c)}</span>`).join("")}</div>
       ${it.memo?`<div class="memo">📝 ${esc(it.memo)}</div>`:""}
